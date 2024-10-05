@@ -39,6 +39,7 @@ exports.userSignup = async (req, res) => {
     generateToken({ userId: newUser._id, res });
 
     res.status(201).json({
+      success: true,
       message: "User created successfully",
       user: {
         id: newUser._id,
@@ -74,6 +75,7 @@ exports.userLogin = async (req, res) => {
     generateToken({ userId: user._id, res });
 
     res.status(200).json({
+      success: true,
       message: "User logged in successfully",
       user: {
         id: user._id,
@@ -91,7 +93,10 @@ exports.userLogin = async (req, res) => {
 exports.userLogout = async (_, res) => {
   try {
     res.clearCookie("token");
-    res.status(200).json({ message: "User logged out successfully" });
+    res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });

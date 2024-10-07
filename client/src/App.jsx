@@ -12,7 +12,7 @@ import CheckAuth from "./common/CheckAuth";
 // import { useDispatch } from "react-redux";
 
 function App() {
-  const [isAuthenticated] = useState(true);
+  const [isAuthenticated] = useState(false);
   const [user] = useState({ role: "user" }); 
   // const dispatch = useDispatch()
   // useEffect(() => {

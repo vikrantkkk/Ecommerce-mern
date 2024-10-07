@@ -9,6 +9,7 @@ const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 exports.userSignup = async (req, res) => {
   try {
     const { name, password, email } = req.body;
+    console.log("🚀 ~ exports.userSignup= ~ name, password, email:", name, password, email)
 
     if (!(name && email && password)) {
       return res.status(400).json({ message: "All fields are required" });
@@ -42,6 +43,8 @@ exports.userSignup = async (req, res) => {
       userId: newUser._id,
       res,
     });
+
+    redis.set(`refreshToken:${newUser._id}`, refreshToken);
 
     res.status(201).json({
       success: true,
@@ -133,7 +136,6 @@ exports.refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
 
-    console.log("🚀 ~ exports.refreshToken= ~ refreshToken:", refreshToken);
 
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token not found" });
@@ -142,7 +144,7 @@ exports.refreshToken = async (req, res) => {
 
     const storedToken =await redis.get(`refreshToken:${decodedToken.userId}`);
 
-    console.log("🚀 ~ exports.refreshToken= ~ storedToken:", storedToken);
+
 
     if (storedToken !== refreshToken) {
       return res.status(400).json({ message: "Invalid refresh token" });

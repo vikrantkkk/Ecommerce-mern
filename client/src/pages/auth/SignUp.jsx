@@ -1,18 +1,23 @@
+import useSignup from "@/hooks/useSignup";
 import CommonForm from "../../common/CommonForm";
 import { registerFormControls } from "../../config/index";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const initialState = {
-  userName: "",
+  name: "",
   email: "",
   password: "",
 };
 const SignUp = () => {
   const [formData, setFormData] = useState(initialState);
+  const {loading, data, userSignUp} = useSignup();
+  console.log("🚀 ~ SignUp ~ data:", data)
 
   const onSubmit = (e) => {
     e.preventDefault();
+    userSignUp( formData ); // call the userSignUp function with the formData
+    
   };
 
   return (

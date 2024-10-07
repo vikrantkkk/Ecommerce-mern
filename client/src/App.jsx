@@ -13,7 +13,7 @@ import CheckAuth from "./common/CheckAuth";
 
 function App() {
   const [isAuthenticated] = useState(true);
-  const [user] = useState({ role: "admin" }); 
+  const [user] = useState({ role: "user" }); 
   // const dispatch = useDispatch()
   // useEffect(() => {
   //   dispatch(checkAuth());

@@ -1,6 +1,8 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
-const { generateToken } = require("../utils/generateToken");
+const jwt = require("jsonwebtoken");
+const generateToken = require("../utils/generateToken");
+const redis = require("../lib/redis");
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
@@ -36,7 +38,10 @@ exports.userSignup = async (req, res) => {
       password: hashedPassword,
     });
 
-    generateToken({ userId: newUser._id, res });
+    const { accessToken, refreshToken } = await generateToken({
+      userId: newUser._id,
+      res,
+    });
 
     res.status(201).json({
       success: true,
@@ -46,6 +51,8 @@ exports.userSignup = async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        accessToken,
+        refreshToken,
       },
     });
   } catch (error) {
@@ -72,7 +79,12 @@ exports.userLogin = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    generateToken({ userId: user._id, res });
+    const { accessToken, refreshToken } = await generateToken({
+      userId: user._id,
+      res,
+    });
+
+    redis.set(`refreshToken:${user._id}`, refreshToken);
 
     res.status(200).json({
       success: true,
@@ -82,6 +94,8 @@ exports.userLogin = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        accessToken,
+        refreshToken,
       },
     });
   } catch (error) {
@@ -90,9 +104,21 @@ exports.userLogin = async (req, res) => {
   }
 };
 
-exports.userLogout = async (_, res) => {
+exports.userLogout = async (req, res) => {
   try {
-    res.clearCookie("token");
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token not found" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    if (decoded && decoded.userId) {
+      await redis.del(`refreshToken:${decoded.userId}`);
+    }
+
+    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken");
+
     res.status(200).json({
       success: true,
       message: "User logged out successfully",
@@ -103,22 +129,42 @@ exports.userLogout = async (_, res) => {
   }
 };
 
-exports.authMiddleware = async (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token)
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorised user!",
-    });
-
+exports.refreshToken = async (req, res) => {
   try {
-    const decoded = jwt.verify(token, "CLIENT_SECRET_KEY");
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: "Unauthorised user!",
+    const { refreshToken } = req.cookies;
+
+    console.log("🚀 ~ exports.refreshToken= ~ refreshToken:", refreshToken);
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token not found" });
+    }
+    const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+    const storedToken =await redis.get(`refreshToken:${decodedToken.userId}`);
+
+    console.log("🚀 ~ exports.refreshToken= ~ storedToken:", storedToken);
+
+    if (storedToken !== refreshToken) {
+      return res.status(400).json({ message: "Invalid refresh token" });
+    }
+
+    const accessToken = jwt.sign(
+      { userId: decodedToken.userId },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
     });
+    res.status(200).json({
+      success: true,
+      message: "refreshToken successfully refreshed",
+      accessToken,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

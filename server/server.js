@@ -1,11 +1,13 @@
 const express = require("express");
-const dotenv = require("dotenv");
-const { dbConnection } = require("./config/dbConnection");
+require("dotenv").config();
+const cookieParser = require("cookie-parser")
 const authRoutes = require("./routes/auth.routes");
+const { dbConnection } = require("./lib/dbConnection");
+
 
 const app = express();
 app.use(express.json());
-dotenv.config();
+app.use(cookieParser())
 
 const port = process.env.PORT || 5000;
 

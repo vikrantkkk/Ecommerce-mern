@@ -1,20 +1,35 @@
 const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
-    userName: {
+    name: {
       type: String,
-      required: true,
+      required: [true, "Name is required"],
       unique: true,
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is requires"],
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     password: {
       type: String,
-      required: true,
+      required: [true, "Password is required"],
+      minlenght: 6,
     },
+    cartItem: [
+      {
+        quantity: {
+          type: Number,
+          default: 1,
+        },
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+        },
+      },
+    ],
     role: {
       type: String,
       enum: ["admin", "user"],

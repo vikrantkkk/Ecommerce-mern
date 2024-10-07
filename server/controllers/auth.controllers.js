@@ -9,7 +9,6 @@ const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 exports.userSignup = async (req, res) => {
   try {
     const { name, password, email } = req.body;
-    console.log("🚀 ~ exports.userSignup= ~ name, password, email:", name, password, email)
 
     if (!(name && email && password)) {
       return res.status(400).json({ message: "All fields are required" });
@@ -39,7 +38,7 @@ exports.userSignup = async (req, res) => {
       password: hashedPassword,
     });
 
-    const { accessToken, refreshToken } = await generateToken({
+    const { refreshToken } = await generateToken({
       userId: newUser._id,
       res,
     });
@@ -53,9 +52,7 @@ exports.userSignup = async (req, res) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role,
-        accessToken,
-        refreshToken,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -82,7 +79,7 @@ exports.userLogin = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const { accessToken, refreshToken } = await generateToken({
+    const { refreshToken } = await generateToken({
       userId: user._id,
       res,
     });
@@ -97,8 +94,6 @@ exports.userLogin = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        accessToken,
-        refreshToken,
       },
     });
   } catch (error) {
@@ -136,15 +131,12 @@ exports.refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
 
-
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token not found" });
     }
     const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
-    const storedToken =await redis.get(`refreshToken:${decodedToken.userId}`);
-
-
+    const storedToken = await redis.get(`refreshToken:${decodedToken.userId}`);
 
     if (storedToken !== refreshToken) {
       return res.status(400).json({ message: "Invalid refresh token" });
@@ -169,4 +161,20 @@ exports.refreshToken = async (req, res) => {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+exports.getProfile = async (req, res) => {
+  try {
+    const {userId} = req.user;
+    const user = await User.findById(userId);
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {}
 };

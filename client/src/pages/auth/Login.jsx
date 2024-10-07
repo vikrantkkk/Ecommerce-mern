@@ -1,3 +1,4 @@
+import useLogin from "@/hooks/useLogin";
 import CommonForm from "../../common/CommonForm";
 import { loginFormControls } from "../../config/index";
 import React, { useState } from "react";
@@ -9,9 +10,12 @@ const initialState = {
 };
 const Login = () => {
   const [formData, setFormData] = useState(initialState);
+  // Add the following code to the Login component
+  const {userLogin,loading} = useLogin()
 
   const onSubmit = (e) => {
     e.preventDefault();
+    userLogin(formData)
   };
 
   return (
@@ -28,6 +32,7 @@ const Login = () => {
         Don't have an account
         <Link to="/auth/signup" className="ml-2 font-medium text-primary hover:underline">Register</Link>
       </p>
+      {loading && <div>loading...</div>}
     </div>
   );
 };

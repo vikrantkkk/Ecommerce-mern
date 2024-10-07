@@ -8,16 +8,20 @@ import AdminDashbboard from "./pages/admin/AdminDashbboard";
 import UserLayout from "./components/user/UserLayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import CheckAuth from "./common/CheckAuth";
-// import { checkAuth } from "./store/authSlice";
-// import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import axios from "axios";
+import { setUser } from "./store/authSlice";
+import useGetProfile from "./hooks/useGetProfile";
 
 function App() {
-  const [isAuthenticated] = useState(false);
-  const [user] = useState({ role: "user" }); 
-  // const dispatch = useDispatch()
-  // useEffect(() => {
-  //   dispatch(checkAuth());
-  // }, [dispatch]);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { userProfile, loading } = useGetProfile();
+
+  useEffect(() => {
+    userProfile();
+  }, [userProfile]);
+  
+  if (loading) return <div>loading...</div>;
 
   return (
     <>

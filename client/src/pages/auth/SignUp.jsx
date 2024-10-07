@@ -11,13 +11,12 @@ const initialState = {
 };
 const SignUp = () => {
   const [formData, setFormData] = useState(initialState);
-  const {loading, data, userSignUp} = useSignup();
-  console.log("🚀 ~ SignUp ~ data:", data)
+  const {loading,userSignUp} = useSignup();
+
 
   const onSubmit = (e) => {
     e.preventDefault();
-    userSignUp( formData ); // call the userSignUp function with the formData
-    
+    userSignUp(formData)
   };
 
   return (
@@ -41,6 +40,7 @@ const SignUp = () => {
           Login
         </Link>
       </p>
+        <div>{loading && <div>...loading</div>}</div>
     </div>
   );
 };

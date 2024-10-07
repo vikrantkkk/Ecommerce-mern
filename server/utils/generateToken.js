@@ -12,7 +12,7 @@ const generateToken = async ({ userId, res }) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: "Lax",
   });
   const refreshToken = jwt.sign(
     {
@@ -25,7 +25,7 @@ const generateToken = async ({ userId, res }) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: "Lax",
   });
 
   return { accessToken, refreshToken };

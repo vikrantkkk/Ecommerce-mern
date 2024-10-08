@@ -20,12 +20,21 @@ function App() {
   useEffect(() => {
     userProfile();
   }, [userProfile]);
-  
+
   if (loading) return <div>loading...</div>;
 
   return (
     <>
       <Routes>
+        <Route
+          path="/"
+          element={
+            <CheckAuth
+              isAuthenticated={isAuthenticated}
+              user={user}
+            ></CheckAuth>
+          }
+        />
         <Route
           path="/auth"
           element={

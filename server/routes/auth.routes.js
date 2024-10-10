@@ -7,8 +7,8 @@ const router = express.Router();
 router.post("/signup",userSignup);
 router.post("/login",userLogin);
 router.post("/logout",userLogout);
+router.post("/refresh-token",refreshToken);
 router.get("/get-profile",authMiddleware, getProfile);
-router.get("/refresh-token",refreshToken);
 
 // router.get("/check-auth", authMiddleware, (req, res) => {
 //     const user = req.user;

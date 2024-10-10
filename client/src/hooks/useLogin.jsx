@@ -1,3 +1,4 @@
+import api from "@/axios/axios";
 import { setUser } from "@/store/authSlice";
 import axios from "axios";
 import { useState } from "react";
@@ -10,7 +11,7 @@ const useLogin = () => {
   const userLogin = async (payload) => {
     try {
       setLoading(true);
-      const response = await axios.post(
+      const response = await api.post(
         "http://localhost:5000/api/v1/auth/login", 
         payload,
         {

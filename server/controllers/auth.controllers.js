@@ -3,9 +3,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const generateToken = require("../utils/generateToken");
 const redis = require("../lib/redis");
+require("dotenv").config();
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
 exports.userSignup = async (req, res) => {
   try {
     const { name, password, email } = req.body;
@@ -52,7 +54,7 @@ exports.userSignup = async (req, res) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
-        role: user.role,
+        role: newUser.role,
       },
     });
   } catch (error) {
@@ -109,7 +111,7 @@ exports.userLogout = async (req, res) => {
       return res.status(400).json({ message: "Refresh token not found" });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     if (decoded && decoded.userId) {
       await redis.del(`refreshToken:${decoded.userId}`);
     }
@@ -130,11 +132,13 @@ exports.userLogout = async (req, res) => {
 exports.refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
-
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token not found" });
     }
-    const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
 
     const storedToken = await redis.get(`refreshToken:${decodedToken.userId}`);
 
@@ -144,13 +148,14 @@ exports.refreshToken = async (req, res) => {
 
     const accessToken = jwt.sign(
       { userId: decodedToken.userId },
-      process.env.JWT_SECRET,
+      process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" }
     );
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "none",
+      maxAge: 12 * 60 * 1000,
     });
     res.status(200).json({
       success: true,
@@ -165,7 +170,11 @@ exports.refreshToken = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const {userId} = req.user;
+    const { userId } = req.user;
+    if (!userId) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
     const user = await User.findById(userId);
     return res.status(200).json({
       success: true,
@@ -176,5 +185,8 @@ exports.getProfile = async (req, res) => {
         role: user.role,
       },
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };

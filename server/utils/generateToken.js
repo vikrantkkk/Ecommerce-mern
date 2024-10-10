@@ -5,7 +5,7 @@ const generateToken = async ({ userId, res }) => {
     {
       userId,
     },
-    process.env.JWT_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: "15m" }
   );
 
@@ -13,12 +13,13 @@ const generateToken = async ({ userId, res }) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "Lax",
+    maxAge: 15 * 60 * 1000, //15m
   });
   const refreshToken = jwt.sign(
     {
       userId,
     },
-    process.env.JWT_SECRET,
+    process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "15d" }
   );
 
@@ -26,6 +27,7 @@ const generateToken = async ({ userId, res }) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "Lax",
+    maxAge: 15 * 24 * 60 * 60 * 1000, //15d
   });
 
   return { accessToken, refreshToken };

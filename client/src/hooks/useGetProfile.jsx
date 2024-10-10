@@ -1,7 +1,9 @@
-import  { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { setUser } from "@/store/authSlice";
 import { useDispatch } from "react-redux";
 import axios from "axios";
+import api from "@/axios/axios";
+import { Navigate } from "react-router-dom";
 
 const useGetProfile = () => {
   const dispatch = useDispatch();
@@ -19,11 +21,14 @@ const useGetProfile = () => {
         dispatch(setUser(response.data));
       }
     } catch (error) {
-      console.log(error);
+      console.log("🚀 ~ userProfile ~ error:", error.status);
+      if (error.status === 401) {
+        Navigate("auth/login");
+      }
     } finally {
       setLoading(false);
     }
-  },[dispatch])
+  }, [dispatch]);
   return { userProfile, loading };
 };
 
